@@ -21,7 +21,7 @@ literals = ["[","]","(",")",",","="]
 t_ignore = " \t\n\r"
 
 def t_LEX(t):
-    r"%% ?LEX"
+    r"%%\s?LEX"
     t.lexer.push_state("lex")
     pass
 
@@ -31,6 +31,10 @@ def t_lex_RETURN(t):
 
 def t_lex_ERROR(t):
     r"error"
+    return t
+
+def t_lex_LITERALS(t):
+    r"%literals"
     return t
 
 def t_lex_STR():
@@ -48,11 +52,10 @@ def t_lex_TYPE(t):
     r"\w+"
 
 def t_lex_YACC(t):
-    r"%% ?YACC"
+    r"%%\s?YACC"
     t.lexer.pop_state()
     t.lexer.push_state("yacc")
     pass
-
 
 
 def t_yacc_RES(t):

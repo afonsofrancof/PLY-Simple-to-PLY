@@ -1,0 +1,22 @@
+ply : lex yacc py
+lex : lVars lFuncs
+
+
+lVars : lVars lVar
+      | lVar
+      
+lVar : LITERALS '=' STR
+     | LITERALS '=' '[' lStr ']'
+     | IGNORE '=' STR
+     | TOKENS '=' '[' lStr ']'
+
+lStr : lStr ',' STR
+     | STR
+
+lFuncs : lFuncs lFunc
+       | lFunc
+lFunc : STR RETURN '(' STR ',' res ')'
+      | STR ERROR '(' STR ',' RES ')'
+
+res : TYPE '(' RES ')'
+    | RES
