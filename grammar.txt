@@ -27,23 +27,21 @@ type : INT
 
 yacc : precedences symboltable rules
 
+precedences : PRECEDENCE '=' '[' lPrecedencesElem ']'
 
-precedences : PRECEDENCE '=' '[' lPrecendencesElem ']'
+lPrecedencesElem : lPrecedencesElem , precedencesElem
+                  | precedencesElem
 
-lPrecendencesElem : lPrecendencesElem , PrecendencesElem
-                  | PrecendencesElem
+precedencesElem : '(' LStr ')'
 
-PrecendencesElem : '(' LStr ')'
+symboltable : TEXT '=' '{' RES '}'
 
+rules : SNT ':' syms
 
+syms : syms sym
 
-symboltable : TEXT '=' '{' dictEntry '}'
-
-
-dictEntry : STR ':' '{' dictEntry '}'
-          | STR ':' type            temos de mudar isto!!!!
-          |
-
-
-rules : 
+sym : ST
+    | SNT
+    | LIT
+    |
           

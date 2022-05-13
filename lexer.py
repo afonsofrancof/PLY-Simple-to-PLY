@@ -18,9 +18,9 @@ reserved = {
 }
 
 tokens = ["LEX", "YACC", "PY", "RES", "TEXT",
-          "STR", "COM", "EXP"] + list(reserved.values())
+          "STR", "COM", "EXP", "SNT", "ST", "LIT"] + list(reserved.values())
 
-literals = ["[", "]", "(", ")", ",", "=", "%"]
+literals = ["[", "]", "(", ")", ",", "=", "%", ":"]
 t_ANY_ignore = " \t\n\r"
 
 
@@ -48,13 +48,28 @@ def t_lex_RES(t):
 def t_lex_YACC(t):
     r"%%\s?YACC"
     t.lexer.pop_state()
+    print("------------------------------------------------")
     t.lexer.push_state("yacc")
     pass
 
 
-# r"[a-z]+\ :\ ([^\{]|\'\{\'|\"\{\")+ "
-def t_yacc_EXP(t):
-    r"[a-z]+\ :\ ([^\{]|\'\{\'|\"\{\")+(\w|\')"
+# # r"[a-z]+\ :\ ([^\{]|\'\{\'|\"\{\")+ "
+# def t_yacc_EXP(t):
+#     r"[a-z]+\ :\ ([^\{]|\'\{\'|\"\{\")+(\w|\')"
+#     return t
+
+
+def t_yacc_SNT(t):
+    r"[a-z]+"
+    return t
+
+
+def t_yacc_ST(t):
+    r"[A-Z]+"
+    return t
+
+def t_yacc_LIT(t):
+    r"\'.+\'"
     return t
 
 
