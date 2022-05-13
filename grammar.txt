@@ -1,10 +1,13 @@
-ply : lex yacc py
-lex : lVars lFuncs
+ply : lex yacc PY
 
+lex : lentries
 
-lVars : lVars lVar
-      | lVar
-      
+lentries : lentries lentry
+         | 
+
+lentry : '%' lVar
+      | lFunc
+
 lVar : LITERALS '=' STR
      | LITERALS '=' '[' lStr ']'
      | IGNORE '=' STR
@@ -13,10 +16,34 @@ lVar : LITERALS '=' STR
 lStr : lStr ',' STR
      | STR
 
-lFuncs : lFuncs lFunc
-       | lFunc
 lFunc : STR RETURN '(' STR ',' res ')'
       | STR ERROR '(' STR ',' RES ')'
 
-res : TYPE '(' RES ')'
+res : type '(' RES ')'
     | RES
+
+type : INT
+     | FLOAT
+
+yacc : precedences symboltable rules
+
+
+precedences : PRECEDENCE '=' '[' lPrecendencesElem ']'
+
+lPrecendencesElem : lPrecendencesElem , PrecendencesElem
+                  | PrecendencesElem
+
+PrecendencesElem : '(' LStr ')'
+
+
+
+symboltable : TEXT '=' '{' dictEntry '}'
+
+
+dictEntry : STR ':' '{' dictEntry '}'
+          | STR ':' type            temos de mudar isto!!!!
+          |
+
+
+rules : 
+          

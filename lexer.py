@@ -2,54 +2,48 @@ from re import T
 import ply.lex as lex
 
 states = (
-    ("lex","exclusive"),
-    ("yacc","exclusive")
+    ("lex", "exclusive"),
+    ("yacc", "exclusive")
 )
 
 reserved = {
     "return": "RETURN",
     "error": "ERROR",
-    "%literals": "LITERALS",
-    "%ignore": "IGNORE",
-    "%tokens": "TOKENS",
-    "%precedence": "PRECED"
+    "literals": "LITERALS",
+    "ignore": "IGNORE",
+    "tokens": "TOKENS",
+    "precedence": "PRECEDENCE",
+    "int": "INT",
+    "float": "FLOAT"
 }
 
-tokens = ["LEX","YACC","PY","RES","TYPE","STR"] + list(reserved.values())
+tokens = ["LEX", "YACC", "PY", "RES", "TEXT",
+          "STR", "COM", "EXP"] + list(reserved.values())
 
-literals = ["[","]","(",")",",","="]
-t_ignore = " \t\n\r"
+literals = ["[", "]", "(", ")", ",", "=", "%"]
+t_ANY_ignore = " \t\n\r"
+
+
+def t_ANY_COM(t):
+    r"[#].*\n"
+    pass
+
 
 def t_LEX(t):
     r"%%\s?LEX"
     t.lexer.push_state("lex")
     pass
 
-def t_lex_RETURN(t):
-    r"return"
+
+def t_lex_yacc_STR(t):
+    r"[fr]?(\"[^\"]*\"|\'[^']*\')"
     return t
 
-def t_lex_ERROR(t):
-    r"error"
-    return t
-
-def t_lex_LITERALS(t):
-    r"%literals"
-    return t
-
-def t_lex_STR():
-    r"[fr]?(\".*\"|\'.*\')"
 
 def t_lex_RES(t):
     r"t(\.\w+)+(\(\d*\))?"
     return t
 
-def t_lex_yacc_VAL(t):
-    r"(\".*\")|(\'.*\')"
-    return t
-
-def t_lex_TYPE(t):
-    r"\w+"
 
 def t_lex_YACC(t):
     r"%%\s?YACC"
@@ -58,19 +52,44 @@ def t_lex_YACC(t):
     pass
 
 
+# r"[a-z]+\ :\ ([^\{]|\'\{\'|\"\{\")+ "
+def t_yacc_EXP(t):
+    r"[a-z]+\ :\ ([^\{]|\'\{\'|\"\{\")+(\w|\')"
+    return t
+
+
+def t_lex_yacc_TEXT(t):
+    r"\w+"
+    t.type = reserved.get(t.value, "TEXT")
+    return t
+
+
 def t_yacc_RES(t):
     r"{.*}"
     return t
+
 
 def t_yacc_PY(t):
     r"%%"
     t.lexer.pop_state()
     pass
 
-def t_PY(t):
-    r"(.|\n)*"
 
-def t_error(t):
+def t_PY(t):
+    r"(.|\n)+"
+    return t
+
+
+def t_ANY_error(t):
     print("Illegal Character: ", t.value[0])
 
+
 lexer = lex.lex()
+f = open('exemplo.in', 'r')
+text = f.read()
+lexer.input(text)
+
+for tok in lexer:
+    print(tok)
+
+f.close()
