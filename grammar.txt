@@ -39,9 +39,9 @@ symboltable : TEXT '=' '{' RES '}'
 rules : SNT ':' syms
 
 syms : syms sym
+     | sym
 
 sym : ST
     | SNT
-    | LIT
-    |
+    | STR
           

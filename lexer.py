@@ -18,7 +18,7 @@ reserved = {
 }
 
 tokens = ["LEX", "YACC", "PY", "RES", "TEXT",
-          "STR", "COM", "EXP", "SNT", "ST", "LIT"] + list(reserved.values())
+          "STR", "COM", "SNT", "ST"] + list(reserved.values())
 
 literals = ["[", "]", "(", ")", ",", "=", "%", ":"]
 t_ANY_ignore = " \t\n\r"
@@ -68,10 +68,6 @@ def t_yacc_ST(t):
     r"[A-Z]+"
     return t
 
-def t_yacc_LIT(t):
-    r"\'.+\'"
-    return t
-
 
 def t_lex_yacc_TEXT(t):
     r"\w+"
@@ -100,11 +96,11 @@ def t_ANY_error(t):
 
 
 lexer = lex.lex()
-f = open('exemplo.in', 'r')
-text = f.read()
-lexer.input(text)
-
-for tok in lexer:
-    print(tok)
-
-f.close()
+# f = open('exemplo.in', 'r')
+# text = f.read()
+# lexer.input(text)
+#
+# for tok in lexer:
+#     print(tok)
+#
+# f.close()
