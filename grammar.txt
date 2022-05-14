@@ -15,6 +15,7 @@ lVar : LITERALS '=' STR
 
 lStr : lStr ',' STR
      | STR
+     | LIT
 
 lFunc : STR RETURN '(' STR ',' res ')'
       | STR ERROR '(' STR ',' RES ')'
@@ -25,23 +26,31 @@ res : type '(' RES ')'
 type : INT
      | FLOAT
 
-yacc : precedences symboltable rules
+yacc : yentries
 
-precedences : PRECEDENCE '=' '[' lPrecedencesElem ']'
+yentries : yentries yentry
+         | 
 
-lPrecedencesElem : lPrecedencesElem , precedencesElem
+yentry : '%' yvar
+       | rules RES
+       | gvar
+
+
+yvar : PRECEDENCE '=' '[' lPrecedencesElem ']'
+
+lPrecedencesElem : lPrecedencesElem ',' precedencesElem
                   | precedencesElem
 
 precedencesElem : '(' LStr ')'
 
-symboltable : TEXT '=' '{' RES '}'
+gvar : ID '=' RES
 
-rules : SNT ':' syms
+rules : ID ':' syms
 
 syms : syms sym
      | sym
 
-sym : ST
-    | SNT
-    | STR
+sym : UCASE
+    | ID
+    | LIT
           

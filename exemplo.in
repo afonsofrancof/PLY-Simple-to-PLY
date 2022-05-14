@@ -14,7 +14,7 @@
 %precedence = [
 ('left','+','-'),
 ('left','*','/'),
-('right','UMINUS'),
+('right','UMINUS')
 ]
 
 # symboltable : dictionary of variables
@@ -40,5 +40,5 @@ def getval(n):
         print(f"Undefined name '{n}'")
     return ts.get(n,0)
 
-y=yacc()
+y=yacc.yacc()
 y.parse("3+4*7")

@@ -9,16 +9,17 @@ states = (
 reserved = {
     "return": "RETURN",
     "error": "ERROR",
-    "literals": "LITERALS",
-    "ignore": "IGNORE",
-    "tokens": "TOKENS",
-    "precedence": "PRECEDENCE",
+    "%literals": "LITERALS",
+    "%ignore": "IGNORE",
+    "%tokens": "TOKENS",
+    "%precedence": "PRECEDENCE",
+    "%prec": "PREC",
     "int": "INT",
     "float": "FLOAT"
 }
 
-tokens = ["LEX", "YACC", "PY", "RES", "TEXT",
-          "STR", "COM", "SNT", "ST"] + list(reserved.values())
+tokens = ["LEX", "YACC", "PY", "RES", "STR", "COM",
+          "UCASE", "ID", "LIT", "PVAR"] + list(reserved.values())
 
 literals = ["[", "]", "(", ")", ",", "=", "%", ":"]
 t_ANY_ignore = " \t\n\r"
@@ -35,7 +36,7 @@ def t_LEX(t):
     pass
 
 
-def t_lex_yacc_STR(t):
+def t_lex_STR(t):
     r"[fr]?(\"[^\"]*\"|\'[^']*\')"
     return t
 
@@ -48,10 +49,8 @@ def t_lex_RES(t):
 def t_lex_YACC(t):
     r"%%\s?YACC"
     t.lexer.pop_state()
-    print("------------------------------------------------")
     t.lexer.push_state("yacc")
     pass
-
 
 # # r"[a-z]+\ :\ ([^\{]|\'\{\'|\"\{\")+ "
 # def t_yacc_EXP(t):
@@ -59,24 +58,43 @@ def t_lex_YACC(t):
 #     return t
 
 
-def t_yacc_SNT(t):
-    r"[a-z]+"
+# def t_lex_yacc_LCASE(t):
+#     r"[a-z]+"
+
+#     return t
+
+def t_yacc_UCASE(t):
+    r"[A-Z][A-Z0-9_]*"
     return t
 
 
-def t_yacc_ST(t):
-    r"[A-Z]+"
+def t_lex_yacc_PVAR(t):
+    r"%[a-z]+"
+    t.type = reserved.get(t.value, "PVAR")
+    if t.type != "PREC":
+        t.value = t.value[1:]
     return t
 
 
-def t_lex_yacc_TEXT(t):
-    r"\w+"
-    t.type = reserved.get(t.value, "TEXT")
+def t_lex_yacc_ID(t):
+    r"[a-zA-Z_]\w*"
+    t.type = reserved.get(t.value, "ID")
     return t
 
 
+def t_yacc_LIT(t):
+    r"\'.\'"
+    return t
+
+
+# alterar expression para casos em que tenha codigo multiline dentro das {}
 def t_yacc_RES(t):
     r"{.*}"
+    return t
+
+
+def t_yacc_STR(t):
+    r"[fr]?(\"[^\"]*\"|\'[^']*\')"
     return t
 
 
@@ -99,8 +117,8 @@ lexer = lex.lex()
 # f = open('exemplo.in', 'r')
 # text = f.read()
 # lexer.input(text)
-#
+
 # for tok in lexer:
 #     print(tok)
-#
+
 # f.close()
