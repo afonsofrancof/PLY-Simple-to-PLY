@@ -177,6 +177,12 @@ def p_yentry_yvar(p):
 def p_yentry_rules(p):
     "yentry : rules RES"
     res = p[2].strip("{} ")
+    try:
+        ast.parse(res)
+    except SyntaxError:
+        p.parser.error = True
+        print(f"Python syntax error at:\n\t {p[2].strip('{}')}")
+
     rule = f"{p[1]}\t{res}\n\n"
     p.parser.ts["yacc"]["rules"].append(rule)
 
