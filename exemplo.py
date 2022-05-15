@@ -1,11 +1,13 @@
 import ply.lex as lex
 import ply.yacc as yacc
 
-literals = "+-/*=()"
-
-tokens = ['VAR', 'NUMBER']
-
-ignore = " \t\n"
+literals = ['+', '-', '/', '*', '=', '(', ')']
+reserved = {
+    "foo": 'FOO',
+    "bar": "BAR"
+}
+tokens = ['VAR', 'NUMBER'] + list(reserved.values())
+t_ignore = " \t\n"
 
 
 def t_VAR(t):
@@ -20,7 +22,7 @@ def t_NUMBER(t):
 
 
 def t_error(t):
-    print(".")
+    print(f"Illegal character '{t.value[0]}', [{t.lexer.lineno}]")
     t.lexer.skip(1)
 
 

@@ -1,8 +1,12 @@
 %% LEX
 
-%literals = "+-/*=()" ## a single char
+%literals = ['+','-','/','*','=','(',')'] ## a single char "+-/*=()"
 %ignore = " \t\n"
 %tokens = [ 'VAR','NUMBER' ]
+%reserved = { 
+    "foo" : 'FOO',
+    "bar" : "BAR"
+}
 
 "[a-zA-Z_][a-zA-Z0-9_]*"      return('VAR', t.value)
 "\d+(\.\d+)?"                 return('NUMBER', float(t.value))

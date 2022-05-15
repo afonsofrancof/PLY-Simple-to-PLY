@@ -12,6 +12,7 @@ reserved = {
     "%literals": "LITERALS",
     "%ignore": "IGNORE",
     "%tokens": "TOKENS",
+    "%reserved": "RESERVED",
     "%precedence": "PRECEDENCE",
     "%prec": "PREC",
     "int": "INT",
@@ -21,7 +22,7 @@ reserved = {
 tokens = ["LEX", "YACC", "PY", "RES", "STR", "COM",
           "UCASE", "ID", "LIT", "PVAR"] + list(reserved.values())
 
-literals = ["[", "]", "(", ")", ",", "=", "%", ":"]
+literals = ["[", "]", "(", ")", ",", "=", "%", ":", "{", "}"]
 t_ANY_ignore = " \t\n\r"
 
 
@@ -52,16 +53,6 @@ def t_lex_YACC(t):
     t.lexer.push_state("yacc")
     pass
 
-# # r"[a-z]+\ :\ ([^\{]|\'\{\'|\"\{\")+ "
-# def t_yacc_EXP(t):
-#     r"[a-z]+\ :\ ([^\{]|\'\{\'|\"\{\")+(\w|\')"
-#     return t
-
-
-# def t_lex_yacc_LCASE(t):
-#     r"[a-z]+"
-
-#     return t
 
 def t_yacc_UCASE(t):
     r"[A-Z][A-Z0-9_]*"
@@ -114,11 +105,4 @@ def t_ANY_error(t):
 
 
 lexer = lex.lex()
-# f = open('exemplo.in', 'r')
-# text = f.read()
-# lexer.input(text)
 
-# for tok in lexer:
-#     print(tok)
-
-# f.close()

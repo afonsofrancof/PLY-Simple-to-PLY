@@ -1,7 +1,17 @@
 import ply.yacc as yacc
-from lexer import tokens, literals
-import pprint
-import json
+from lexer import tokens
+import ast
+
+
+def grammarCheck():
+    for elem in parser.rulesCalled:
+        if elem not in parser.rulesDefined:
+            parser.error = True
+            print(
+                f"Called rule {elem}, but it's definition could not be found.")
+    if not parser.error:
+        # print(json.dumps(parser.ts, sort_keys=False, indent=4))
+        write_to_file()
 
 
 def p_ply(p):
@@ -22,7 +32,7 @@ def p_lentries_empty(p):
 
 
 def p_lentry_lfunc(p):
-    "lentry : lFunc "
+    "lentry : lFunc"
     p.parser.ts["lex"]["funcs"].append(p[1])
 
 
@@ -32,41 +42,54 @@ def p_lentry_lvar(p):
 
 def p_lVar_literals_str(p):
     "lVar : LITERALS '=' STR"
-    res = f"{p[1]} = {p[3]}\n\n"
-    print(res)
+    res = f"{p[1]} = {p[3]}\n"
     p.parser.ts["lex"]["vars"]["literals"] = res
+    for e in p[3][1:-1]:
+        p.parser.lex_tokens.add(e)
 
 
 def p_lVar_literals_list(p):
-    "lVar : LITERALS '=' '[' lStr ']'"
-    res = f"{p[1]} = {p[4]}\n\n"
+    "lVar : LITERALS '=' list"
+    res = f"{p[1]} = {p[3]}\n"
     p.parser.ts["lex"]["vars"]["literals"] = res
+    for e in ast.literal_eval(p[3]):
+        p.parser.lex_tokens.add(e)
 
 
 def p_lVar_ignore(p):
     "lVar : IGNORE '=' STR"
-    res = f"{p[1]} = {p[3]}\n\n"
+    res = f"t_{p[1]} = {p[3]}\n"
     p.parser.ts["lex"]["vars"]["ignore"] = res
 
 
 def p_lVar_tokens(p):
     "lVar : TOKENS '=' list"
-    res = f"{p[1]} = {p[3]}\n\n"
+    res = f"{p[1]} = {p[3]}\n"
+    for elem in p[3].strip('[]').split(','):
+        p.parser.lex_tokens.add(elem.strip('\'\"'))
     p.parser.ts["lex"]["vars"]["tokens"] = res
 
 
+def p_lVar_reserved(p):
+    "lVar : RESERVED '=' dict"
+    res = f"{p[1]} = {p[3]}\n"
+    for e in ast.literal_eval(p[3]).values():
+        p.parser.lex_tokens.add(e)
+    p.parser.ts["lex"]["vars"]["reserved"] = res
+
+
 def p_list(p):
-    "list : '[' lStr ']'"
+    "list : '[' lCont ']'"
     p[0] = p[1] + p[2] + p[3]
 
 
-def p_lStr_multiple(p):
-    "lStr : lStr ',' elem"
+def p_lCont_multiple(p):
+    "lCont : lCont ',' elem"
     p[0] = p[1] + p[2] + p[3]
 
 
-def p_lStr_single(p):
-    "lStr : elem"
+def p_lCont_single(p):
+    "lCont : elem"
     p[0] = p[1]
 
 
@@ -80,6 +103,26 @@ def p_elem_char(p):
     p[0] = p[1]
 
 
+def p_dict(p):
+    "dict : '{' dictElems '}'"
+    p[0] = f"{p[1]}\n{p[2]}\n{p[3]}"
+
+
+def p_dictElems_multiple(p):
+    "dictElems : dictElems ',' dictElem"
+    p[0] = f"{p[1]}{p[2]}\n{p[3]}"
+
+
+def p_dictElems_single(p):
+    "dictElems : dictElem"
+    p[0] = f"{p[1]}"
+
+
+def p_dictElem(p):
+    "dictElem : elem ':' elem"
+    p[0] = f"\t{p[1]} {p[2]} {p[3]}"
+
+
 def p_lFunc_return(p):
     "lFunc : STR RETURN '(' STR ',' res ')'"
     striped_name = p[4].strip("\'\"")
@@ -91,7 +134,7 @@ def p_lFunc_return(p):
 
 def p_lFunc_error(p):
     "lFunc : STR ERROR '(' STR ',' RES ')' "
-    p[0] = f"def t_error(t):\n\tprint({p[1]})\n\t{p[6]}\n\n"
+    p[0] = f"def t_error(t):\n\tprint({p[4]})\n\t{p[6]}\n\n"
 
 
 def p_res_single(p):
@@ -144,23 +187,30 @@ def p_yentry_gvar(p):
 
 
 def p_yvar_preced(p):
-    "yvar : PRECEDENCE '=' '[' lPrecedencesElem ']'"
-    p[0] = f"{p[1]} {p[2]} {p[3]}\n{p[4]}\n{p[5]}\n\n"
+    "yvar : PRECEDENCE '=' precedenceList"
+    p[0] = f"{p[1]} {p[2]} {p[3]}\n"
 
 
-def p_lPrecedencesElem_multiple(p):
-    "lPrecedencesElem : lPrecedencesElem ',' precedencesElem"
+def p_precedenceList(p):
+    "precedenceList : '[' precedenceElems ']'"
+    p[0] = f"{p[1]}\n{p[2]}\n{p[3]}\n"
+
+
+def p_precedenceElems_multiple(p):
+    "precedenceElems : precedenceElems ',' precedenceElem"
     p[0] = p[1] + ",\n" + p[3]
 
 
-def p_lPrecedencesElem_single(p):
-    "lPrecedencesElem : precedencesElem"
+def p_precedenceElems_single(p):
+    "precedenceElems : precedenceElem"
     p[0] = p[1]
 
 
-def p_precedencesElem(p):
-    "precedencesElem : '(' lStr ')' "
-    p[0] = p[1] + p[2] + p[3]
+def p_precedenceElem(p):
+    "precedenceElem : '(' lCont ')' "
+    p[0] = '\t' + p[1] + p[2] + p[3]
+    for elem in ast.literal_eval(p[2].strip('()'))[1:]:
+        p.parser.lex_tokens.add(elem)
 
 
 def p_gvar(p):
@@ -172,11 +222,12 @@ def p_rules(p):
     "rules : ID ':' syms "
     var = f"\"{p[1]}\""
     num = 0
-    if var in parser.nametracker:
-        num = parser.nametracker.get(var)
-    parser.nametracker[var] = num + 1
+    if var in p.parser.nametracker:
+        num = p.parser.nametracker.get(var)
+    p.parser.nametracker[var] = num + 1
     header = f"def p_{p[1]}_{num}(t):\n"
     p[0] = f"{header}\t\"{p[1]} : {p[3]}\"\n"
+    parser.rulesDefined.add(p[1])
 
 
 def p_syms_multiple(p):
@@ -191,17 +242,24 @@ def p_syms_single(p):
 
 def p_sym_ucase(p):
     "sym : UCASE"
+    if p[1] not in p.parser.lex_tokens:
+        p.parser.error = True
+        print(f"ERROR: Token {p[1]} not declared.")
     p[0] = p[1]
 
 
 def p_sym_id(p):
     "sym : ID"
     p[0] = p[1]
+    parser.rulesCalled.add(p[1])
 
 
 def p_sym_lit(p):
     "sym : LIT"
     p[0] = p[1]
+    if p[1][1:-1] not in p.parser.lex_tokens:
+        p.parser.error = True
+        print(f"ERROR: Literal {p[1]} not declared.")
 
 
 def p_sym_prec(p):
@@ -211,32 +269,46 @@ def p_sym_prec(p):
 
 def p_error(p):
     print("ERROR", p, "\n", p.value, "\n", p.type, "\n", p.lineno)
+    parser.error = True
 
 
 parser = yacc.yacc()
 parser.nametracker = {}
-parser.ts = {"lex": {
-    "vars": {"literals": '',
-             "tokens": '',
-             "ignore": ''
-             },
-    "funcs": []
-},
+parser.error = False
+parser.rulesDefined = set([])
+parser.rulesCalled = set([])
+parser.lex_tokens = set([])
+parser.ts = {
+    "lex": {
+        "vars": {"literals": '',
+                 "reserved": '',
+                 "tokens": '',
+                 "ignore": ''
+                 },
+        "funcs": []
+    },
     "yacc": {
-    "vars": [],
-    "rules": []
-},
+        "vars": [],
+        "rules": []
+    },
     "py": ""
 }
 
 
 def write_to_file():
+    f_out = open('exemplo.py', 'w')
     header_lex = "import ply.lex as lex\n"
     header_yacc = "import ply.yacc as yacc\n\n"
+    reserved_append = " + list(reserved.values())\n"
+    if parser.ts["lex"]["vars"]["reserved"] != '':
+        new_tokens = parser.ts["lex"]["vars"]["tokens"]
+        new_tokens = new_tokens[:-1] + reserved_append
+        parser.ts["lex"]["vars"]["tokens"] = new_tokens
     f_out.write(header_lex + header_yacc)
     elem = parser.ts["lex"]
     for var in elem["vars"].values():
         f_out.write(var)
+    f_out.write("\n")
     for func in elem["funcs"]:
         f_out.write(func)
     f_out.write("lexer = lex.lex()\n\n")
@@ -246,16 +318,14 @@ def write_to_file():
     for rule in elem["rules"]:
         f_out.write(rule)
     f_out.write(parser.ts["py"])
+    f_out.flush()
+    f_out.close()
 
 
 f = open('exemplo.in', 'r')
-f_out = open('exemplo.py', 'w')
 text = f.read()
 parser.parse(text)
 
-write_to_file()
+grammarCheck()
 
 f.close()
-f_out.flush()
-f_out.close()
-print(json.dumps(parser.ts, sort_keys=False, indent=4))
