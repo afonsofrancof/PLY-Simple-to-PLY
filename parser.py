@@ -1,5 +1,6 @@
 import ply.yacc as yacc
 from lexer import tokens
+import sys
 import ast
 
 
@@ -9,9 +10,6 @@ def grammarCheck():
             parser.error = True
             print(
                 f"Called rule {elem}, but it's definition could not be found.")
-    if not parser.error:
-        # print(json.dumps(parser.ts, sort_keys=False, indent=4))
-        write_to_file()
 
 
 def p_ply(p):
@@ -20,7 +18,8 @@ def p_ply(p):
         ast.parse(p[3])
     except SyntaxError as se:
         p.parser.error = True
-        print(f"\u001b[31m In your custom Python code, at line {se.lineno}:{se.offset}\n\t{se.text.strip()} \nSyntaxError: {se.msg}\n \u001b[0m")
+        print(
+            f"\u001b[31m In your custom Python code, at line {se.lineno}:{se.offset}\n\t{se.text.strip()} \nSyntaxError: {se.msg}\n \u001b[0m")
 
     p.parser.ts["py"] = p[3]
 
@@ -183,7 +182,7 @@ def p_yentry_yvar(p):
 def p_yentry_rules(p):
     "yentry : ID ':' syms RES"
 
-    #Gramatica
+    # Gramatica
     var = f"\"{p[1]}\""
     num = 0
     if var in p.parser.nametracker:
@@ -193,16 +192,18 @@ def p_yentry_rules(p):
     sFinal = f"{header}\t\"{p[1]} : {p[3]}\"\n"
     parser.rulesDefined.add(p[1])
 
-    #Python
-    res = p[4].strip("{} ")
+    # Python
+    res = p[4].strip("{}").strip()
+    resformated = "\t" + res.replace("\n", "\n\t")
     try:
         ast.parse(res)
     except SyntaxError as se:
         p.parser.error = True
-        print(f"\u001b[31m Error at rule \"{p[1]}\", line {se.lineno}:{se.offset}\n\t{se.text.strip()} \nSyntaxError: {se.msg}\n \u001b[0m")
+        print(
+            f"\u001b[31m Error at rule \"{p[1]}\", line {se.lineno}:{se.offset}\n\t{se.text.strip()} \nSyntaxError: {se.msg}\n \u001b[0m")
 
-    rule = f"{p[1]}\t{res}\n\n"
-    p[0] = sFinal+rule
+    rule = f"{sFinal}{resformated}\n\n"
+    p[0] = rule
     p.parser.ts["yacc"]["rules"].append(rule)
 
 
@@ -308,8 +309,8 @@ parser.ts = {
 }
 
 
-def write_to_file():
-    f_out = open('exemplo.py', 'w')
+def write_to_file(output_file):
+    f_out = open(output_file, 'w')
     header_lex = "import ply.lex as lex\n"
     header_yacc = "import ply.yacc as yacc\n\n"
     reserved_append = " + list(reserved.values())\n"
@@ -335,10 +336,32 @@ def write_to_file():
     f_out.close()
 
 
-f = open('exemplo.in', 'r')
-text = f.read()
-parser.parse(text)
+def check_input():
+    if len(sys.argv) < 3:
+        if len(sys.argv) < 2:
+            print("Ficheiro de input e output nao fornecidos")
+        else:
+            print("Ficheiro de input nao fornecido")
 
-grammarCheck()
 
-f.close()
+def open_and_parse():
+    f = open(sys.argv[1], 'r')
+    text = f.read()
+    parser.parse(text)
+    return f
+
+
+def check_and_write(f):
+    grammarCheck()
+    if not parser.error:
+        write_to_file(sys.argv[2])
+    f.close()
+
+
+def main():
+    check_input()
+    f = open_and_parse()
+    check_and_write(f)
+
+
+main()

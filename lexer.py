@@ -80,7 +80,7 @@ def t_yacc_LIT(t):
 
 # alterar expression para casos em que tenha codigo multiline dentro das {}
 def t_yacc_RES(t):
-    r"{.*}"
+    r"{[^\}]*}"
     return t
 
 

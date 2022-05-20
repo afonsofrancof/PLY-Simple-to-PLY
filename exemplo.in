@@ -26,7 +26,12 @@ ts = { }
 
 stat : VAR '=' exp { ts[t[1]] = t[3] }
 stat : exp { print(t[1]) }
-exp : exp '+' exp { t[0] = t[1] + t[3]a # You can even use comments here }
+exp : exp '+' exp { t[0] = t[1] + t[3]
+if 1 == 1:
+	print("1 is 1")
+else:
+	print("1 is 2")
+}
 exp : exp '-' exp { t[0] = t[1] - t[3] }
 exp : exp '*' exp { t[0] = t[1] * t[3] }
 exp : exp '/' exp { t[0] = t[1] / t[3] }
@@ -37,7 +42,7 @@ exp : VAR { t[0] = getval(t[1]) }
 
 %%
 
-def p_error(t)a:
+def p_error(t):
     print(f"Syntax error at '{t.value}', [{t.lexer.lineno}]")
 def getval(n):
     if n not in ts: 
