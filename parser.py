@@ -16,6 +16,12 @@ def grammarCheck():
 
 def p_ply(p):
     "ply : lex yacc PY"
+    try:
+        ast.parse(p[3])
+    except SyntaxError as se:
+        p.parser.error = True
+        print(f"\u001b[31m In your custom Python code, at line {se.lineno}:{se.offset}\n\t{se.text.strip()} \nSyntaxError: {se.msg}\n \u001b[0m")
+
     p.parser.ts["py"] = p[3]
 
 
@@ -175,15 +181,28 @@ def p_yentry_yvar(p):
 
 
 def p_yentry_rules(p):
-    "yentry : rules RES"
-    res = p[2].strip("{} ")
+    "yentry : ID ':' syms RES"
+
+    #Gramatica
+    var = f"\"{p[1]}\""
+    num = 0
+    if var in p.parser.nametracker:
+        num = p.parser.nametracker.get(var)
+    p.parser.nametracker[var] = num + 1
+    header = f"def p_{p[1]}_{num}(t):\n"
+    sFinal = f"{header}\t\"{p[1]} : {p[3]}\"\n"
+    parser.rulesDefined.add(p[1])
+
+    #Python
+    res = p[4].strip("{} ")
     try:
         ast.parse(res)
-    except SyntaxError:
+    except SyntaxError as se:
         p.parser.error = True
-        print(f"Python syntax error at:\n\t {p[2].strip('{}')}")
+        print(f"\u001b[31m Error at rule \"{p[1]}\", line {se.lineno}:{se.offset}\n\t{se.text.strip()} \nSyntaxError: {se.msg}\n \u001b[0m")
 
     rule = f"{p[1]}\t{res}\n\n"
+    p[0] = sFinal+rule
     p.parser.ts["yacc"]["rules"].append(rule)
 
 
@@ -222,18 +241,6 @@ def p_precedenceElem(p):
 def p_gvar(p):
     "gvar : ID '=' RES"
     p[0] = f"{p[1]} = {p[3]}\n"
-
-
-def p_rules(p):
-    "rules : ID ':' syms "
-    var = f"\"{p[1]}\""
-    num = 0
-    if var in p.parser.nametracker:
-        num = p.parser.nametracker.get(var)
-    p.parser.nametracker[var] = num + 1
-    header = f"def p_{p[1]}_{num}(t):\n"
-    p[0] = f"{header}\t\"{p[1]} : {p[3]}\"\n"
-    parser.rulesDefined.add(p[1])
 
 
 def p_syms_multiple(p):
