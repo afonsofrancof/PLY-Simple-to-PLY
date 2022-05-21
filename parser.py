@@ -235,8 +235,9 @@ def p_precedenceElems_single(p):
 def p_precedenceElem(p):
     "precedenceElem : '(' lCont ')' "
     p[0] = '\t' + p[1] + p[2] + p[3]
-    for elem in ast.literal_eval(p[2].strip('()'))[1:]:
-        p.parser.lex_tokens.add(elem)
+    for elem in ast.literal_eval(p[2].strip('()')):
+        if elem not in ['left', 'right', 'nonassoc']:
+            p.parser.lex_tokens.add(elem)
 
 
 def p_gvar(p):
@@ -362,6 +363,7 @@ def main():
     check_input()
     f = open_and_parse()
     check_and_write(f)
+
 
 
 main()
